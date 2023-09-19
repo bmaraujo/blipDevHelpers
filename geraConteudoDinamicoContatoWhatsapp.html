@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de JSON</title>
+    <!-- Adicione os links para os arquivos CSS do Bootstrap -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <h2>Preencha os campos abaixo:</h2>
+        <form id="jsonForm">
+            <div class="form-group">
+                <label for="first_name">First Name:</label>
+                <input type="text" class="form-control" id="first_name" required>
+            </div>
+            <div class="form-group">
+                <label for="formatted_name">Formatted Name:</label>
+                <input type="text" class="form-control" id="formatted_name" required>
+            </div>
+            <div class="form-group">
+                <label for="last_name">Last Name:</label>
+                <input type="text" class="form-control" id="last_name" required>
+            </div>
+            <div class="form-group">
+                <label for="phone">Phone:</label>
+                <input type="text" class="form-control" id="phone" required>
+            </div>
+            <div class="form-group">
+                <label for="wa_id">WhatsApp ID:</label>
+                <input type="text" class="form-control" id="wa_id" required>
+            </div>
+            <button type="button" class="btn btn-primary" id="generateJson">Gerar JSON</button>
+        </form>
+
+        <div class="mt-3">
+            <button class="btn btn-success" id="copyJson" style="display: none;">Copiar JSON</button>
+            <textarea class="form-control" id="generatedJson" rows="20" readonly></textarea>
+        </div>
+    </div>
+
+    <!-- Adicione os links para os arquivos JavaScript do Bootstrap e do jQuery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            // Ao clicar no botão "Gerar JSON"
+            $("#generateJson").click(function() {
+                const first_name = $("#first_name").val();
+                const formatted_name = $("#formatted_name").val();
+                const last_name = $("#last_name").val();
+                const phone = `+${$("#phone").val()}`;
+                const wa_id = $("#wa_id").val();
+
+                const jsonData = {
+                    "type": "contacts",
+                    "contacts": [
+                        {
+                            "name": {
+                                "first_name": first_name,
+                                "formatted_name": formatted_name,
+                                "last_name": last_name
+                            },
+                            "phones": [
+                                {
+                                    "phone": phone,
+                                    "type": "WORK",
+                                    "wa_id": wa_id
+                                }
+                            ]
+                        }
+                    ]
+                };
+
+                // Exibir o JSON gerado e o botão "Copiar JSON"
+                $("#generatedJson").val(JSON.stringify(jsonData, null, 4));
+                $("#copyJson").show();
+            });
+
+            // Ao clicar no botão "Copiar JSON"
+            $("#copyJson").click(function() {
+                const generatedJson = document.getElementById("generatedJson");
+                generatedJson.select();
+                document.execCommand("copy");
+            });
+        });
+    </script>
+</body>
+</html>
