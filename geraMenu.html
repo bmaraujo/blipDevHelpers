@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de JSON</title>
+    <!-- Adicione os links para os arquivos CSS do Bootstrap -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <h2>Preencha os campos abaixo:</h2>
+        <form id="jsonForm">
+            <div class="form-group">
+                <label for="mensagem">Mensagem:</label>
+                <textarea class="form-control" id="mensagem" rows="3" required></textarea>
+            </div>
+            <div class="form-group">
+                <label for="buttonText">Texto do Botão:</label>
+                <input type="text" class="form-control" id="buttonText" required>
+            </div>
+            <div id="sectionsContainer">
+                <!-- Seções e opções serão adicionadas aqui -->
+            </div>
+            <button type="button" class="btn btn-primary mt-2" id="addSection">Adicionar Seção</button>
+            <button type="button" class="btn btn-primary mt-2" id="generateJson">Gerar JSON</button>
+        </form>
+
+        <div class="mt-3">
+            <button class="btn btn-success" id="copyJson" style="display: none;">Copiar JSON</button>
+            <textarea class="form-control" id="generatedJson" rows="20" readonly></textarea>
+        </div>
+    </div>
+
+    <!-- Adicione os links para os arquivos JavaScript do Bootstrap e do jQuery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            // Ao clicar no botão "Adicionar Seção"
+            $("#addSection").click(function() {
+                const sectionId = $(".section").length + 1;
+                const sectionHtml = `
+                    <div class="section">
+                        <h4>Seção ${sectionId}</h4>
+                        <div class="form-group">
+                            <label for="sectionTitle_${sectionId}">Título da Seção:</label>
+                            <input type="text" class="form-control" id="sectionTitle_${sectionId}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="options_${sectionId}">Opções:</label>
+                            <div id="optionsContainer_${sectionId}">
+                                <!-- Opções serão adicionadas aqui -->
+                            </div>
+                            <button type="button" class="btn btn-primary mt-2" data-section="${sectionId}" id="addOption">Adicionar Opção</button>
+                        </div>
+                    </div>
+                `;
+                $("#sectionsContainer").append(sectionHtml);
+            });
+
+            // Ao clicar no botão "Adicionar Opção"
+            $(document).on("click", "#addOption", function() {
+                const sectionId = $(this).data("section");
+                const optionId = $(`#optionsContainer_${sectionId} .option`).length + 1;
+                const optionHtml = `
+                    <div class="option">
+                        <h5>Opção ${optionId}</h5>
+                        <div class="form-group">
+                            <label for="optionTitle_${sectionId}_${optionId}">Título:</label>
+                            <input type="text" class="form-control" id="optionTitle_${sectionId}_${optionId}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="optionDescription_${sectionId}_${optionId}">Descrição:</label>
+                            <input type="text" class="form-control" id="optionDescription_${sectionId}_${optionId}" required>
+                        </div>
+                        <button type="button" class="btn btn-danger" data-section="${sectionId}" data-option="${optionId}" id="removeOption">Remover Opção</button>
+                    </div>
+                `;
+                $(`#optionsContainer_${sectionId}`).append(optionHtml);
+            });
+
+            // Ao clicar no botão "Remover Opção"
+            $(document).on("click", "#removeOption", function() {
+                const sectionId = $(this).data("section");
+                const optionId = $(this).data("option");
+                $(`#optionsContainer_${sectionId} .option:nth-child(${optionId})`).remove();
+            });
+
+            // Ao clicar no botão "Gerar JSON"
+            $("#generateJson").click(function() {
+                const mensagem = $("#mensagem").val();
+                const buttonText = $("#buttonText").val();
+
+                const sections = [];
+
+                $(".section").each(function() {
+                    const sectionId = $(this).find("input[type='text']").first().val();
+                    const options = [];
+
+                    $(this).find(".option").each(function() {
+                        const optionTitle = $(this).find("input[type='text']").first().val();
+                        const optionDescription = $(this).find("input[type='text']").last().val();
+
+                        options.push({
+                            "title": optionTitle,
+                            "description": optionDescription
+                        });
+                    });
+
+                    sections.push({
+                        "title": sectionId,
+                        "rows": options
+                    });
+                });
+
+                const jsonData = {
+                    "recipient_type": "individual",
+                    "type": "interactive",
+                    "interactive": {
+                        "type": "list",
+                        "body": {
+                            "text": mensagem
+                        },
+                        "action": {
+                            "button": buttonText,
+                            "sections": sections
+                        }
+                    }
+                };
+
+                // Exibir o JSON gerado e o botão "Copiar JSON"
+                $("#generatedJson").val(JSON.stringify(jsonData, null, 4));
+                $("#copyJson").show();
+            });
+
+            // Ao clicar no botão "Copiar JSON"
+            $("#copyJson").click(function() {
+                const generatedJson = document.getElementById("generatedJson");
+                generatedJson.select();
+                document.execCommand("copy");
+            });
+        });
+    </script>
+</body>
+</html>
