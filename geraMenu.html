@@ -105,6 +105,7 @@
                         const optionDescription = $(this).find("input[type='text']").last().val();
 
                         options.push({
+                            "id":optionTitle.toLowerCase().replace(/\s+/g, '-').substring(0,10),
                             "title": optionTitle,
                             "description": optionDescription
                         });
