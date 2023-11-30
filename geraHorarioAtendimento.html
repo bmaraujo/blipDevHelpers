@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <title>Service hours</title>
+</head>
+<body>
+
+<div class="container mt-5">
+  <h1>Service hours</h1>
+  <div class="mb-3">
+    <button class="btn btn-primary" data-toggle="modal" data-target="#importModal">Import</button>
+    <button class="btn btn-info ml-2" data-toggle="modal" data-target="#exportModal" onclick="exportSchedule()">Export</button>
+  </div>
+
+  <div class="row">
+    <div class="col-md-6">
+      <h3>Schedule Form</h3>
+      <form id="scheduleForm">
+        <div class="form-group">
+          <label for="day">Day of the Week:</label>
+          <select class="form-control" id="day">
+            <option value="0">Sunday</option>
+            <option value="1">Monday</option>
+            <option value="2">Tuesday</option>
+            <option value="3">Wednesday</option>
+            <option value="4">Thursday</option>
+            <option value="5">Friday</option>
+            <option value="6">Saturday</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="start">Start Time:</label>
+          <input type="time" class="form-control" id="start">
+        </div>
+        <div class="form-group">
+          <label for="end">End Time:</label>
+          <input type="time" class="form-control" id="end">
+        </div>
+        <button type="button" class="btn btn-success" onclick="addSchedule()">Add Schedule</button>
+      </form>
+    </div>
+
+    <div class="col-md-6">
+      <h3>Schedule Preview</h3>
+      <div id="schedulePreview"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Import Modal -->
+<div class="modal" id="importModal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">Import JSON</h4>
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <textarea class="form-control" id="importJson" rows="5"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" onclick="loadJson()">Load</button>
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Export Modal -->
+<div class="modal" id="exportModal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">Export JSON</h4>
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <textarea class="form-control" id="exportedJson" rows="20" readonly></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-success" id="copyJson">Copiar JSON</button>
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let scheduleData = [];
+
+  function addSchedule() {
+    const day = $('#day').val();
+    const start = $('#start').val();
+    const end = $('#end').val();
+
+    if (start && end) {
+      const existingSchedule = scheduleData.find(schedule => schedule.num === parseInt(day));
+
+      if (existingSchedule) {
+        existingSchedule.workTime.push({ start, end });
+        // Sort workTime by start time
+        existingSchedule.workTime.sort((a, b) => a.start.localeCompare(b.start));
+      } else {
+        const schedule = {
+          num: parseInt(day),
+          name: getDayName(parseInt(day)),
+          portugueseName: getPortugueseDayName(parseInt(day)),
+          workTime: [{ start, end }]
+        };
+        scheduleData.push(schedule);
+      }
+
+      // Sort scheduleData by day and within each day by start time
+      scheduleData.sort((a, b) => a.num - b.num);
+      scheduleData.forEach(schedule => schedule.workTime.sort((a, b) => a.start.localeCompare(b.start)));
+
+      updateSchedulePreview();
+      clearForm();
+    }
+  }
+
+  function updateSchedulePreview() {
+    let previewHtml = '';
+    scheduleData.forEach((schedule, index) => {
+      previewHtml += `
+        <div>
+          <strong>${schedule.name}</strong> (${schedule.portugueseName}):<br>
+          ${schedule.workTime.map((time, i) => `${time.start} - ${time.end} <button class="btn btn-warning btn-sm" onclick="editSchedule(${index},${i})">Editar</button>`).join('<br>')}
+          <hr>
+        </div>
+      `;
+    });
+    $('#schedulePreview').html(previewHtml);
+  }
+
+  function editSchedule(dayIndex, timeIndex) {
+    const editedTime = scheduleData[dayIndex].workTime[timeIndex];
+    $('#day').val(scheduleData[dayIndex].num);
+    $('#start').val(editedTime.start);
+    $('#end').val(editedTime.end);
+
+    // Remove the edited time from the schedule
+    scheduleData[dayIndex].workTime.splice(timeIndex, 1);
+
+    updateSchedulePreview();
+  }
+
+  function exportSchedule() {
+    const json = JSON.stringify(scheduleData, null, 4);
+    $('#exportedJson').val(json);
+  }
+
+  $("#copyJson").click(function() {
+    $("#exportedJson").select();
+    document.execCommand("copy");
+  });
+
+  function clearForm() {
+    
+    $('#start').val('');
+    $('#end').val('');
+  }
+
+  function getDayName(day) {
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    return days[day];
+  }
+
+  function getPortugueseDayName(day) {
+    const days = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+    return days[day];
+  }
+
+  function loadJson() {
+    const importedJson = $('#importJson').val();
+    try {
+      const jsonData = JSON.parse(importedJson);
+      if (Array.isArray(jsonData)) {
+        scheduleData = jsonData;
+        // Sort scheduleData by day and within each day by start time
+        scheduleData.sort((a, b) => a.num - b.num);
+        scheduleData.forEach(schedule => schedule.workTime.sort((a, b) => a.start.localeCompare(b.start)));
+        updateSchedulePreview();
+        $('#importModal').modal('hide');
+      } else {
+        alert('Invalid JSON format');
+      }
+    } catch (error) {
+      alert('Invalid JSON format');
+    }
+  }
+</script>
+
+</body>
+</html>
