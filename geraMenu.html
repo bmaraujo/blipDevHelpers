@@ -12,8 +12,16 @@
         <h2>Preencha os campos abaixo:</h2>
         <form id="jsonForm">
             <div class="form-group">
+                <label for="mensagem">Titulo:</label>
+                <textarea class="form-control" id="menuTitle"></textarea>
+            </div>
+            <div class="form-group">
                 <label for="mensagem">Mensagem:</label>
                 <textarea class="form-control" id="mensagem" rows="3" required></textarea>
+            </div>
+            <div class="form-group">
+                <label for="mensagem">Footer:</label>
+                <textarea class="form-control" id="menuFooter" rows="2" required></textarea>
             </div>
             <div class="form-group">
                 <label for="buttonText">Texto do Botão:</label>
@@ -91,7 +99,9 @@
 
             // Ao clicar no botão "Gerar JSON"
             $("#generateJson").click(function() {
+                const menuTitle = $("#menuTitle").val();
                 const mensagem = $("#mensagem").val();
+                const menuFooter = $("#menuFooter").val();
                 const buttonText = $("#buttonText").val();
 
                 const sections = [];
@@ -122,8 +132,15 @@
                     "type": "interactive",
                     "interactive": {
                         "type": "list",
+                        "header": {
+                            "type": "text",
+                            "text": menuTitle
+                        },
                         "body": {
                             "text": mensagem
+                        },
+                        "footer": {
+                            "text": menuFooter
                         },
                         "action": {
                             "button": buttonText,
